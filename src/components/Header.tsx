@@ -1,6 +1,8 @@
+// src/components/Header.tsx (Eksiksiz ve Güncellenmiş)
+
 import { useState } from 'react';
 import { Link } from 'react-router-dom';
-import { User, LogOut, Menu, X } from 'lucide-react';
+import { User, LogOut, Menu, X, ShoppingCart } from 'lucide-react'; // <-- ShoppingCart import edildi
 import { useAuth } from '../contexts/AuthContext';
 import { signOut } from '../lib/auth';
 import LoginModal from './LoginModal';
@@ -61,6 +63,14 @@ export default function Header() {
             <div className="hidden md:flex items-center space-x-4">
               {user ? (
                 <>
+                  {/* MASAÜSTÜ SEPET İKONU */}
+                  <Link 
+                    to="/cart" 
+                    className="flex items-center space-x-1 hover:text-teal-100 transition-colors"
+                  >
+                    <ShoppingCart className="w-6 h-6" />
+                  </Link>
+                  
                   <Link
                     to={getDashboardLink()}
                     className="flex items-center space-x-2 hover:text-teal-100 transition-colors"
@@ -118,6 +128,16 @@ export default function Header() {
 
                 {user ? (
                   <>
+                    {/* MOBİL SEPET LİNKİ */}
+                    <Link 
+                      to="/cart" 
+                      className="flex items-center space-x-2 hover:text-teal-100 transition-colors"
+                      onClick={() => setMobileMenuOpen(false)}
+                    >
+                      <ShoppingCart className="w-5 h-5" />
+                      <span>Sepetim</span>
+                    </Link>
+
                     <Link
                       to={getDashboardLink()}
                       className="flex items-center space-x-2 hover:text-teal-100 transition-colors"
