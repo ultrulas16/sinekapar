@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useCallback } from 'react'; // <-- useCallback eklendi
 import { Plus, Edit, Trash2, Building2, MapPin } from 'lucide-react';
 import { supabase, type Customer, type Dealer, type DealerTierLimit } from '../../lib/supabase';
 
@@ -24,12 +24,8 @@ export default function DealerCustomers({ dealerId, dealer }: DealerCustomersPro
     notes: '',
   });
 
-  useEffect(() => {
-    loadCustomers();
-    if (dealer) loadTierLimit(dealer.tier);
-  }, [dealerId, dealer]);
-
-  const loadCustomers = async () => {
+  // 1. loadCustomers fonksiyonu useCallback ile sarmalandı
+  const loadCustomers = useCallback(async () => {
     try {
       const { data, error } = await supabase
         .from('customers')
@@ -42,9 +38,10 @@ export default function DealerCustomers({ dealerId, dealer }: DealerCustomersPro
     } catch (error) {
       console.error('Error loading customers:', error);
     }
-  };
+  }, [dealerId]); // <-- dealerId'ye bağımlı
 
-  const loadTierLimit = async (tier: number) => {
+  // 2. loadTierLimit fonksiyonu useCallback ile sarmalandı
+  const loadTierLimit = useCallback(async (tier: number) => {
     try {
       const { data, error } = await supabase
         .from('dealer_tier_limits')
@@ -57,7 +54,13 @@ export default function DealerCustomers({ dealerId, dealer }: DealerCustomersPro
     } catch (error) {
       console.error('Error loading tier limit:', error);
     }
-  };
+  }, []); // Sadece ilk yüklemede çağrılacağı için boş bağımlılık dizisi
+
+  // 3. useEffect bağımlılıkları güncellendi
+  useEffect(() => {
+    loadCustomers();
+    if (dealer) loadTierLimit(dealer.tier);
+  }, [loadCustomers, dealer, loadTierLimit]); // <-- loadCustomers ve loadTierLimit eklendi
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -82,10 +85,12 @@ export default function DealerCustomers({ dealerId, dealer }: DealerCustomersPro
 
         if (error) throw error;
       } else {
+        // Yeni müşteri ekleniyor
         const { error } = await supabase.from('customers').insert(customerData);
         if (error) throw error;
       }
 
+      // 4. Durum sıfırlanıp müşteriler yeniden yükleniyor (Zaten vardı, ama kararlı hale getirildi)
       setShowForm(false);
       setEditingCustomer(null);
       setForm({
@@ -98,7 +103,7 @@ export default function DealerCustomers({ dealerId, dealer }: DealerCustomersPro
         tax_number: '',
         notes: '',
       });
-      loadCustomers();
+      await loadCustomers(); // <-- Başarılı eklemeden/güncellemeden sonra veriyi yeniden çek
     } catch (error: any) {
       alert('Hata: ' + error.message);
     }
@@ -125,7 +130,7 @@ export default function DealerCustomers({ dealerId, dealer }: DealerCustomersPro
     try {
       const { error } = await supabase.from('customers').delete().eq('id', customerId);
       if (error) throw error;
-      loadCustomers();
+      await loadCustomers(); // <-- Silme işleminden sonra listeyi tazele
     } catch (error: any) {
       alert('Hata: ' + error.message);
     }
@@ -147,7 +152,7 @@ export default function DealerCustomers({ dealerId, dealer }: DealerCustomersPro
         <button
           onClick={() => {
             if (!canAddMore) {
-              alert(`Maksimum müşteri limitine ulaştınız (${tierLimit?.max_customers}). Daha fazla müşteri eklemek için bayi seviyenizi yükseltiniz.`);
+              alert(`Maksimum müşteri limitine ulaştınız (${tierLimit?.max_customers}). Daha fazla müşteri eklemek için seviyenizi yükseltiniz.`);
               return;
             }
             setShowForm(!showForm);
