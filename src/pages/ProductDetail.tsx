@@ -1,11 +1,12 @@
-// src/pages/ProductDetail.tsx (Tasarım Tutarlılığı İçin Güncellenmiş Versiyon)
+// src/pages/ProductDetail.tsx
 
 import { useParams } from 'react-router-dom';
 import { useState, useEffect } from 'react';
 import { supabase, type Product, type ProductImage } from '../lib/supabase';
 import { useAuth } from '../contexts/AuthContext';
-import Header from '../components/Header'; // <-- Ortak Header
+import Header from '../components/Header';
 import { ShoppingCart } from 'lucide-react';
+import { Breadcrumbs } from '../components/Breadcrumbs'; // <-- EKLENDİ
 
 // Sepete ekleme mantığı
 const handleAddToCart = async (user: any, productId: string, setAddingToCart: (id: string | null) => void) => {
@@ -13,7 +14,7 @@ const handleAddToCart = async (user: any, productId: string, setAddingToCart: (i
         alert('Sepete eklemek için giriş yapmalısınız.');
         return;
     }
-    // ... (Sepete ekleme mantığı aynı kalacak)
+
     setAddingToCart(productId);
     try {
         const { data: existingItem } = await supabase
@@ -95,7 +96,6 @@ export default function ProductDetail() {
     fetchProduct();
   }, [productId]);
 
-  // Loading ve Bulunamadı durumları da Header ve Footer'ı içermeli
   if (loading) {
     return (
         <div className="min-h-screen bg-gray-50 flex flex-col">
@@ -103,7 +103,7 @@ export default function ProductDetail() {
             <div className="flex justify-center items-center flex-grow text-lg">
                 <div className="inline-block w-12 h-12 border-4 border-teal-600 border-t-transparent rounded-full animate-spin"></div>
             </div>
-            <footer className="bg-gray-900 text-white py-8 mt-auto"> {/* Footer'ı en alta sabitle */}
+            <footer className="bg-gray-900 text-white py-8 mt-auto">
               <div className="container mx-auto px-4 text-center">
                 <p className="text-gray-400"> &copy; 2024 SineKapar. Tüm hakları saklıdır.</p>
               </div>
@@ -119,7 +119,7 @@ export default function ProductDetail() {
             <div className="container mx-auto p-8 text-center flex-grow">
                 <p className="text-2xl text-red-500 mt-10">Ürün bulunamadı veya geçersiz ID.</p>
             </div>
-            <footer className="bg-gray-900 text-white py-8 mt-auto"> {/* Footer'ı en alta sabitle */}
+            <footer className="bg-gray-900 text-white py-8 mt-auto">
               <div className="container mx-auto px-4 text-center">
                 <p className="text-gray-400"> &copy; 2024 SineKapar. Tüm hakları saklıdır.</p>
               </div>
@@ -134,13 +134,12 @@ export default function ProductDetail() {
   const vatStatus = product.vat_included ? '(KDV Dahil)' : `(KDV Hariç: %${product.vat_rate})`;
 
   return (
-    // min-h-screen bg-gray-50 flex flex-col sınıfları tutarlılık için kalmalı
     <div className="min-h-screen bg-gray-50 flex flex-col"> 
         <Header />
+        <Breadcrumbs /> {/* <-- EKLENDİ */}
 
-        {/* Ana içerik alanını Products.tsx'teki <section> etiketine benzer şekilde yapalım. */}
         <section className="py-12 flex-grow"> 
-            <div className="container mx-auto px-4"> {/* Products.tsx'teki konteyner sınıfı */}
+            <div className="container mx-auto px-4">
                 <div className="bg-white shadow-xl rounded-xl p-8 lg:p-12">
                     <div className="grid grid-cols-1 lg:grid-cols-2 gap-10">
                         
@@ -224,7 +223,7 @@ export default function ProductDetail() {
             </div>
         </section>
 
-        <footer className="bg-gray-900 text-white py-8"> {/* Footer sınıfı Products.tsx ile aynı */}
+        <footer className="bg-gray-900 text-white py-8">
             <div className="container mx-auto px-4 text-center">
             <p className="text-gray-400">
                 &copy; 2024 SineKapar. Tüm hakları saklıdır.
