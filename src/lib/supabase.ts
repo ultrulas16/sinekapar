@@ -1,3 +1,5 @@
+// src/lib/supabase.ts
+
 import { createClient } from '@supabase/supabase-js';
 
 const supabaseUrl = import.meta.env.VITE_SUPABASE_URL;
@@ -134,4 +136,18 @@ export interface Visit {
   completion_notes?: string;
   created_at: string;
   updated_at: string;
+}
+
+// YENİ EKLENEN SEPET ARATÜZLERİ
+export interface CartItem {
+  id: string; // Sepet öğesi ID'si (cart tablosunun primary key'i)
+  user_id: string;
+  product_id: string;
+  quantity: number;
+  created_at: string;
+}
+
+export interface CartItemWithProduct extends CartItem {
+  // Sepet sayfasında kullanmak için Product bilgisini içerir
+  product: Product; 
 }
