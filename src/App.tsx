@@ -1,4 +1,4 @@
-// src/App.tsx (Güncellenmiş)
+// src/App.tsx
 
 import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
 import { AuthProvider } from './contexts/AuthContext';
@@ -7,7 +7,7 @@ import LandingPage from './pages/LandingPage';
 import Products from './pages/Products';
 import ProductDetail from './pages/ProductDetail'; 
 import Cart from './pages/Cart'; 
-import Checkout from './pages/Checkout'; // <-- YENİ İÇE AKTARMA
+import Checkout from './pages/Checkout'; // <-- EKLENDİ
 import About from './pages/About';
 import Contact from './pages/Contact';
 import DealerRegister from './pages/DealerRegister';
