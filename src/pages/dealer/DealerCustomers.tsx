@@ -1,4 +1,4 @@
-import { useEffect, useState, useCallback } from 'react'; // <-- 1. useCallback eklendi
+import { useEffect, useState, useCallback } from 'react'; 
 import { Plus, Edit, Trash2, Building2, MapPin } from 'lucide-react';
 import { supabase, type Customer, type Dealer, type DealerTierLimit } from '../../lib/supabase';
 
@@ -12,6 +12,7 @@ export default function DealerCustomers({ dealerId, dealer }: DealerCustomersPro
   const [tierLimit, setTierLimit] = useState<DealerTierLimit | null>(null);
   const [showForm, setShowForm] = useState(false);
   const [editingCustomer, setEditingCustomer] = useState<Customer | null>(null);
+  const [refreshKey, setRefreshKey] = useState(0); // <-- YENİ: Yeniden çizimi zorlamak için sayaç
 
   const [form, setForm] = useState({
     company_name: '',
@@ -24,7 +25,6 @@ export default function DealerCustomers({ dealerId, dealer }: DealerCustomersPro
     notes: '',
   });
 
-  // 2. loadCustomers fonksiyonu useCallback ile sarmalandı
   const loadCustomers = useCallback(async () => {
     try {
       const { data, error } = await supabase
@@ -38,7 +38,7 @@ export default function DealerCustomers({ dealerId, dealer }: DealerCustomersPro
     } catch (error) {
       console.error('Error loading customers:', error);
     }
-  }, [dealerId]); // dealerId değiştiğinde fonksiyon yenilenir
+  }, [dealerId]);
 
   const loadTierLimit = useCallback(async (tier: number) => {
     try {
@@ -55,11 +55,11 @@ export default function DealerCustomers({ dealerId, dealer }: DealerCustomersPro
     }
   }, []);
 
-  // 3. useEffect bağımlılıkları güncellendi
+  // refreshKey buraya eklendiği için, her sayaç arttığında loadCustomers çalışacak.
   useEffect(() => {
     loadCustomers();
     if (dealer) loadTierLimit(dealer.tier);
-  }, [loadCustomers, dealer, loadTierLimit]);
+  }, [loadCustomers, dealer, loadTierLimit, refreshKey]); // <-- refreshKey eklendi
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -102,8 +102,8 @@ export default function DealerCustomers({ dealerId, dealer }: DealerCustomersPro
         notes: '',
       });
       
-      // 4. Veri tabanı işlemi tamamlandıktan sonra listeyi yenilemek için bekle (await)
-      await loadCustomers(); 
+      // Yeniden çizimi tetikle (Mutlaka yeni veriyi çekecektir)
+      setRefreshKey(prev => prev + 1); 
       
     } catch (error: any) {
       alert('Hata: ' + error.message);
@@ -132,7 +132,8 @@ export default function DealerCustomers({ dealerId, dealer }: DealerCustomersPro
       const { error } = await supabase.from('customers').delete().eq('id', customerId);
       if (error) throw error;
       
-      await loadCustomers(); // Silme işleminden sonra listeyi tazele
+      // Silme işleminden sonra yeniden çizimi tetikle
+      setRefreshKey(prev => prev + 1); 
     } catch (error: any) {
       alert('Hata: ' + error.message);
     }
