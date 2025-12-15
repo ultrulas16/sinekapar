@@ -1,8 +1,11 @@
+// src/pages/Products.tsx (Güncellenmiş)
+
 import { useEffect, useState } from 'react';
 import { ShoppingCart } from 'lucide-react';
 import { supabase, type Product, type ProductImage } from '../lib/supabase';
 import { useAuth } from '../contexts/AuthContext';
 import Header from '../components/Header';
+import { Link } from 'react-router-dom'; // <-- YENİ İÇE AKTARMA
 
 export default function Products() {
   const { profile, user } = useAuth();
@@ -46,7 +49,10 @@ export default function Products() {
     }
   };
 
-  const handleAddToCart = async (productId: string) => {
+  // Sepete ekleme fonksiyonu güncellendi: e (event) parametresi eklendi
+  const handleAddToCart = async (productId: string, e: React.MouseEvent) => {
+    e.stopPropagation(); // <-- Bu satır, Link bileşeninin tıklanmasını engeller
+
     if (!user) {
       alert('Sepete eklemek için giriş yapmalısınız.');
       return;
@@ -108,9 +114,11 @@ export default function Products() {
           ) : (
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
               {products.map((product) => (
-                <div
-                  key={product.id}
-                  className="bg-white rounded-xl shadow-lg overflow-hidden hover:shadow-xl transition-shadow"
+                // Ürün kartını Link ile sarmalıyoruz
+                <Link 
+                    to={`/product/${product.id}`} // <-- Detay sayfasına yönlendirme
+                    key={product.id} 
+                    className="bg-white rounded-xl shadow-lg overflow-hidden hover:shadow-xl transition-shadow block" // block ekledik
                 >
                   <div className="aspect-video bg-gray-200 flex items-center justify-center">
                     {product.images.find((img) => img.is_main)?.image_url || product.images[0]?.image_url ? (
@@ -152,7 +160,8 @@ export default function Products() {
 
                       {user ? (
                         <button
-                          onClick={() => handleAddToCart(product.id)}
+                          // Tıklama olayını handleAddToCart'a gönderiyoruz
+                          onClick={(e) => handleAddToCart(product.id, e)} 
                           disabled={addingToCart === product.id}
                           className="w-full px-4 py-2 bg-gradient-to-r from-teal-600 to-cyan-600 text-white rounded-lg hover:from-teal-700 hover:to-cyan-700 transition-colors flex items-center justify-center space-x-2 disabled:opacity-50"
                         >
@@ -166,7 +175,7 @@ export default function Products() {
                       )}
                     </div>
                   </div>
-                </div>
+                </Link>
               ))}
             </div>
           )}
