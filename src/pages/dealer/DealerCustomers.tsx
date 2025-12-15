@@ -7,7 +7,6 @@ interface DealerCustomersProps {
   dealer: Dealer | null;
 }
 
-// Gecikme fonksiyonu (eski RLS/senkronizasyon şüphesi için tutuldu)
 const delay = (ms: number) => new Promise(resolve => setTimeout(resolve, ms));
 
 export default function DealerCustomers({ dealerId, dealer }: DealerCustomersProps) {
@@ -16,6 +15,9 @@ export default function DealerCustomers({ dealerId, dealer }: DealerCustomersPro
   const [showForm, setShowForm] = useState(false);
   const [editingCustomer, setEditingCustomer] = useState<Customer | null>(null);
   const [refreshKey, setRefreshKey] = useState(0); 
+  
+  // ⚠️ DEBUGGING: dealerId değerini kontrol ediyoruz
+  console.log('DealerCustomers: Rendered. Current Dealer ID:', dealerId);
 
   const [form, setForm] = useState({
     company_name: '',
@@ -29,14 +31,31 @@ export default function DealerCustomers({ dealerId, dealer }: DealerCustomersPro
   });
 
   const loadCustomers = useCallback(async () => {
+    if (!dealerId) {
+      // ⚠️ DEBUGGING: Eğer dealerId null ise burası çalışır
+      console.warn('loadCustomers: Dealer ID henüz mevcut değil, sorgu atlanıyor.');
+      setCustomers([]); // Liste boş kalsın
+      return; 
+    }
+    
+    console.log('loadCustomers: Sorgu başlatılıyor. Kullanılan Dealer ID:', dealerId);
+
     try {
+      // Filtreleme geri getirildi, çünkü RLS'i devre dışı bıraktınız.
       const { data, error } = await supabase
         .from('customers')
         .select('*')
-        // .eq('dealer_id', dealerId) // ⚠️ GEÇİCİ TEŞHİS: Bu satır yorum satırı yapıldı. Eğer şimdi liste gelirse, sorun dealerId değişkenindedir.
+        .eq('dealer_id', dealerId) // <-- Filtreleme yapılıyor
         .order('created_at', { ascending: false });
 
-      if (error) throw error;
+      if (error) {
+        console.error('loadCustomers HATA:', error);
+        throw error;
+      }
+      
+      // ⚠️ DEBUGGING: Gelen veriyi kontrol ediyoruz
+      console.log('loadCustomers BAŞARILI. Gelen Kayıt Sayısı:', data ? data.length : 0);
+      
       if (data) setCustomers(data);
     } catch (error) {
       console.error('Error loading customers:', error);
@@ -44,6 +63,7 @@ export default function DealerCustomers({ dealerId, dealer }: DealerCustomersPro
   }, [dealerId]);
 
   const loadTierLimit = useCallback(async (tier: number) => {
+    // ... (Mantık aynı)
     try {
       const { data, error } = await supabase
         .from('dealer_tier_limits')
@@ -107,11 +127,13 @@ export default function DealerCustomers({ dealerId, dealer }: DealerCustomersPro
       setRefreshKey(prev => prev + 1); 
       
     } catch (error: any) {
+      console.error('Müşteri ekleme/güncelleme hatası:', error);
       alert('Hata: ' + error.message);
     }
   };
 
   const handleEdit = (customer: Customer) => {
+    // ... (Mantık aynı)
     setEditingCustomer(customer);
     setForm({
       company_name: customer.company_name,
@@ -144,6 +166,7 @@ export default function DealerCustomers({ dealerId, dealer }: DealerCustomersPro
 
   return (
     <div>
+      {/* ... (Geri kalan render kodu aynı kalır) ... */}
       <div className="flex justify-between items-center mb-6">
         <div>
           <h2 className="text-xl font-semibold text-gray-900">Müşteriler</h2>
@@ -189,7 +212,8 @@ export default function DealerCustomers({ dealerId, dealer }: DealerCustomersPro
             {editingCustomer ? 'Müşteri Düzenle' : 'Yeni Müşteri Ekle'}
           </h3>
           <form onSubmit={handleSubmit} className="space-y-4">
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            {/* ... (Form içeriği aynı) ... */}
+             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-1">
                   Firma Adı *
