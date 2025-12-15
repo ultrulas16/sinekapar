@@ -1,14 +1,14 @@
 // src/pages/Checkout.tsx
 
 import { useState, useEffect, useCallback } from 'react';
-import { supabase, type CartItemWithProduct, type Address, type Product } from '../lib/supabase';
+import { supabase, type CartItemWithProduct, type Address } from '../lib/supabase';
 import { useAuth } from '../contexts/AuthContext';
 import { useNavigate, Link } from 'react-router-dom';
 import Header from '../components/Header';
 import { Breadcrumbs } from '../components/Breadcrumbs';
 import { Loader2, CreditCard, Home, Truck } from 'lucide-react';
 
-// Adres verilerinin çekilmesi (Basitleştirilmiş)
+// Demo Adres Verileri (Gerçekte Supabase'den çekilmeli)
 const DUMMY_ADDRESSES: Address[] = [
     { id: '1', user_id: '', title: 'Ev Adresim', full_name: 'Ahmet Yılmaz', phone: '5551234567', city: 'İstanbul', district: 'Kadıköy', full_address: 'Örnek Mah. No:1, Kat:2', is_default: true, created_at: new Date().toISOString() },
     { id: '2', user_id: '', title: 'İş Adresim', full_name: 'Ahmet Yılmaz', phone: '5559876543', city: 'Ankara', district: 'Çankaya', full_address: 'Ticaret Merkezi, 5. Kat', is_default: false, created_at: new Date().toISOString() },
@@ -18,14 +18,14 @@ export default function Checkout() {
     const { user, loading: authLoading } = useAuth();
     const navigate = useNavigate();
     const [cartItems, setCartItems] = useState<CartItemWithProduct[]>([]);
-    const [addresses, setAddresses] = useState<Address[]>(DUMMY_ADDRESSES);
+    const [addresses] = useState<Address[]>(DUMMY_ADDRESSES); // Gerçekte fetchAddresses kullanılmalı
     const [selectedShippingAddressId, setSelectedShippingAddressId] = useState<string | null>(DUMMY_ADDRESSES[0]?.id || null);
     const [loading, setLoading] = useState(true);
     const [isSubmitting, setIsSubmitting] = useState(false);
     const [paymentMethod, setPaymentMethod] = useState<'card' | 'transfer' | 'cod'>('card');
     const [shippingOption, setShippingOption] = useState<'standard' | 'express'>('standard');
 
-    // Kargo ücretlerini basitleştirilmiş olarak tanımlayalım
+    // Kargo ücretleri
     const SHIPPING_FEES = {
         standard: 15.00,
         express: 45.00,
@@ -33,12 +33,12 @@ export default function Checkout() {
 
     const fetchCartAndAddresses = useCallback(async () => {
         if (!user) {
-            navigate('/login'); // Giriş yapılmadıysa yönlendir
+            navigate('/login');
             return;
         }
         setLoading(true);
         try {
-            // 1. Sepet Verilerini Çekme (Cart.tsx'teki sorgunun aynısı)
+            // Sepet Verilerini Çekme
             const { data: cartData, error: cartError } = await supabase
                 .from('cart')
                 .select(`id, user_id, product_id, quantity, created_at, product:products (id, name, base_price, vat_rate, vat_included, stock_quantity)`)
@@ -54,12 +54,6 @@ export default function Checkout() {
             }
             setCartItems(fetchedItems);
 
-            // 2. Adres Verilerini Çekme (Gerçekte Supabase'den çekilmeli)
-            // const { data: addrData, error: addrError } = await supabase.from('addresses').select('*').eq('user_id', user.id);
-            // if (addrError) throw addrError;
-            // setAddresses(addrData);
-
-            // Eğer hiç adres yoksa, kullanıcının adres eklemesini isteyin.
             if (DUMMY_ADDRESSES.length > 0 && !selectedShippingAddressId) {
                 setSelectedShippingAddressId(DUMMY_ADDRESSES[0].id);
             }
@@ -101,10 +95,10 @@ export default function Checkout() {
             const orderRecord = {
                 user_id: user.id,
                 shipping_address_id: selectedShippingAddressId,
-                billing_address_id: selectedShippingAddressId, // Basitlik için aynı kullanıldı
+                billing_address_id: selectedShippingAddressId,
                 status: 'pending' as const,
                 total_amount: totalAmount,
-                vat_amount: 0, // KDV hesaplaması daha karmaşık bir mantık gerektirir, şimdilik 0
+                vat_amount: 0, 
                 shipping_fee: shippingFee,
                 payment_method: paymentMethod,
                 payment_status: 'pending' as const,
@@ -125,7 +119,7 @@ export default function Checkout() {
                 order_id: newOrderId,
                 product_id: item.product_id,
                 quantity: item.quantity,
-                unit_price: item.product.base_price, // KDV dahil/hariç fiyatlandırma modelinize göre düzeltilmeli
+                unit_price: item.product.base_price,
                 unit_vat_rate: item.product.vat_rate,
             }));
 
@@ -135,16 +129,14 @@ export default function Checkout() {
 
             if (itemsError) throw itemsError;
 
-            // 3. Sepeti Temizleme (Opsiyonel: Sipariş başarılıysa sepeti temizle)
-            const { error: cartClearError } = await supabase
+            // 3. Sepeti Temizleme
+            await supabase
                 .from('cart')
                 .delete()
                 .eq('user_id', user.id);
-            
-            if (cartClearError) console.error('Sepet temizlenirken hata oluştu:', cartClearError);
 
             alert(`Siparişiniz başarıyla alındı! Sipariş No: ${newOrderId}`);
-            navigate(`/order/${newOrderId}`); // Yeni bir sipariş detay sayfasına yönlendir
+            navigate(`/order/${newOrderId}`); 
 
         } catch (error: any) {
             console.error('Sipariş verilirken hata:', error);
@@ -216,7 +208,6 @@ export default function Checkout() {
                                             <p className="text-sm text-gray-600">{addr.full_address}, {addr.district}/{addr.city}</p>
                                         </div>
                                     ))}
-                                    {/* Adres Ekleme Butonu buraya eklenebilir */}
                                 </div>
                             )}
                         </div>
@@ -265,7 +256,6 @@ export default function Checkout() {
                                         </p>
                                         {paymentMethod === 'card' && (
                                             <div className="mt-2 p-2 border-t text-sm">
-                                                {/* Gerçekte burada kart bilgileri formu yer alacaktır */}
                                                 Kart bilgileri formu yer tutucu
                                             </div>
                                         )}
@@ -282,7 +272,7 @@ export default function Checkout() {
                             
                             <div className="space-y-3">
                                 <div className="flex justify-between text-gray-700">
-                                    <span>Ara Toplam (KDV Dahil/Hariç)</span>
+                                    <span>Ara Toplam</span>
                                     <span>{subtotal.toLocaleString('tr-TR', { style: 'currency', currency: 'TRY' })}</span>
                                 </div>
                                 <div className="flex justify-between text-gray-700">
