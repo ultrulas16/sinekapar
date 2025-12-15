@@ -1,7 +1,7 @@
 // src/pages/ProductDetail.tsx
 
 import { useParams } from 'react-router-dom';
-import { useState, useEffect } => 'react';
+import { useState, useEffect } 'react';
 import { supabase, Product } from '../lib/supabase';
 
 // Sepet mantığı için basit bir placeholder fonksiyonu
