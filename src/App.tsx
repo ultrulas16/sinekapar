@@ -1,13 +1,13 @@
-// src/App.tsx
+// src/App.tsx (Güncellenmiş)
 
 import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
 import { AuthProvider } from './contexts/AuthContext';
-// Not: ProtectedRoute bileşenini eklediğiniz varsayılmıştır.
 import { ProtectedRoute } from './components/ProtectedRoute'; 
 import LandingPage from './pages/LandingPage';
 import Products from './pages/Products';
-import ProductDetail from './pages/ProductDetail'; // <-- EKLENDİ
-import Cart from './pages/Cart'; // <-- EKLENDİ
+import ProductDetail from './pages/ProductDetail'; 
+import Cart from './pages/Cart'; 
+import Checkout from './pages/Checkout'; // <-- YENİ İÇE AKTARMA
 import About from './pages/About';
 import Contact from './pages/Contact';
 import DealerRegister from './pages/DealerRegister';
@@ -23,13 +23,14 @@ function App() {
           <Route path="/" element={<LandingPage />} />
           <Route path="/products" element={<Products />} />
           <Route path="/product/:productId" element={<ProductDetail />} /> 
-          <Route path="/cart" element={<Cart />} /> {/* <-- EKLENDİ */}
+          <Route path="/cart" element={<Cart />} /> 
+          <Route path="/checkout" element={<Checkout />} /> {/* <-- EKLENDİ */}
           
           <Route path="/about" element={<About />} />
           <Route path="/contact" element={<Contact />} />
           <Route path="/dealer-register" element={<DealerRegister />} />
           
-          {/* Korumalı Rotalar: Admin */}
+          {/* Korumalı Rotalar */}
           <Route 
             path="/admin" 
             element={
@@ -39,7 +40,6 @@ function App() {
             } 
           />
           
-          {/* Korumalı Rotalar: Dealer/Operator */}
           <Route 
             path="/dealer" 
             element={
