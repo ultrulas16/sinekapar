@@ -2,12 +2,12 @@
 
 import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
 import { AuthProvider } from './contexts/AuthContext';
-// Not: Bu bileşeni oluşturduğunuzu varsayıyorum.
+// Not: ProtectedRoute bileşenini eklediğiniz varsayılmıştır.
 import { ProtectedRoute } from './components/ProtectedRoute'; 
 import LandingPage from './pages/LandingPage';
 import Products from './pages/Products';
-// Yeni eklenen ProductDetail sayfasını içe aktarın.
-import ProductDetail from './pages/ProductDetail'; 
+import ProductDetail from './pages/ProductDetail'; // <-- EKLENDİ
+import Cart from './pages/Cart'; // <-- EKLENDİ
 import About from './pages/About';
 import Contact from './pages/Contact';
 import DealerRegister from './pages/DealerRegister';
@@ -22,10 +22,9 @@ function App() {
           {/* Halk Açık Rotalar */}
           <Route path="/" element={<LandingPage />} />
           <Route path="/products" element={<Products />} />
+          <Route path="/product/:productId" element={<ProductDetail />} /> 
+          <Route path="/cart" element={<Cart />} /> {/* <-- EKLENDİ */}
           
-          {/* Ürün Detay Sayfası Rotosu */}
-          <Route path="/product/:productId" element={<ProductDetail />} /> {/* <-- EKLENDİ */}
-
           <Route path="/about" element={<About />} />
           <Route path="/contact" element={<Contact />} />
           <Route path="/dealer-register" element={<DealerRegister />} />
@@ -34,7 +33,6 @@ function App() {
           <Route 
             path="/admin" 
             element={
-              // Not: UserRole tipi, src/lib/supabase.ts dosyasında tanımlı olmalıdır.
               <ProtectedRoute requiredRole="admin"> 
                 <AdminDashboard />
               </ProtectedRoute>
