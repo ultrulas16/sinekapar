@@ -13,14 +13,11 @@ const nameMap: { [key: string]: string } = {
   'admin': 'Yönetici Paneli',
   'dealer': 'Bayi Paneli',
   'cart': 'Sepetim',
-  // Dinamik ID'ler için genel bir isim
   'product': 'Ürün Detayı', 
-  // Buraya daha sonra /checkout, /orders gibi rotaları ekleyebiliriz
 };
 
 export function Breadcrumbs() {
   const location = useLocation();
-  // URL'yi /'den sonraki parçalarına ayırır, boş stringleri filtreler
   const pathnames = location.pathname.split('/').filter((x) => x);
 
   return (
@@ -36,23 +33,17 @@ export function Breadcrumbs() {
           const isLast = index === pathnames.length - 1;
           const to = `/${pathnames.slice(0, index + 1).join('/')}`;
           
-          // Eğer parça bir ID ise (örn: /product/1234), bunu 'Ürün Detayı' olarak gösterelim
           let displayName = nameMap[value] || value;
           
-          // Dinamik ID'leri ele alma (Örn: /product/urun-id-burada)
-          if (pathnames[index - 1] === 'product' && index > 0) {
-              displayName = nameMap['product']; // "Ürün Detayı"
-          }
-
-          // Örnek: '1234' gibi bir ürün ID'sini göstermemek için
-          if (pathnames[index - 1] === 'product' && index > 0) {
-              // Ürün detay sayfasının linki için sadece /product/1234 yerine /product yeterli
-              // Breadcrumb'da ID'yi göstermeden "Ürün Detayı" yazsın
-          }
-
-          if (pathnames[index - 1] === 'product' && index > 0) {
-            // Dinamik parçaları breadcrumb'da göstermeden atlayalım
+          // Eğer parça ürün ID'si gibi dinamik bir değerse (/product/ID)
+          // ve bir önceki parça 'product' ise, o parçayı atla.
+          if (pathnames[index - 1] === 'product' && index > 0 && !nameMap[value]) {
             return null;
+          }
+
+          // Eğer dinamik ID parçası atlanıyorsa, link adı 'Ürün Detayı' olmalı
+          if (pathnames[index - 1] === 'product' && index > 0) {
+            displayName = nameMap['product'];
           }
 
           return (
