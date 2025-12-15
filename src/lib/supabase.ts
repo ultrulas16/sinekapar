@@ -151,3 +151,46 @@ export interface CartItemWithProduct extends CartItem {
   // Sepet sayfasında kullanmak için Product bilgisini içerir
   product: Product; 
 }
+
+// Adres Bilgileri
+export interface Address {
+  id: string;
+  user_id: string;
+  title: string; // Ev, İş, Depo
+  full_name: string;
+  phone: string;
+  city: string;
+  district: string;
+  full_address: string;
+  is_default: boolean;
+  created_at: string;
+}
+
+// Sipariş Ana Tablosu
+export interface Order {
+  id: string;
+  user_id: string;
+  billing_address_id: string;
+  shipping_address_id: string;
+  status: 'pending' | 'processing' | 'shipped' | 'delivered' | 'cancelled';
+  total_amount: number; // KDV ve kargo dahil son miktar
+  vat_amount: number;
+  shipping_fee: number;
+  payment_method: 'card' | 'transfer' | 'cod'; // cod: kapıda ödeme
+  payment_status: 'pending' | 'paid' | 'failed';
+  shipping_option: string;
+  dealer_id?: string; // Eğer bayilik sistemi üzerinden sipariş veriliyorsa
+  created_at: string;
+  updated_at: string;
+}
+
+// Sipariş Öğeleri (Hangi ürün kaç adet alındı)
+export interface OrderItem {
+  id: string;
+  order_id: string;
+  product_id: string;
+  quantity: number;
+  unit_price: number; // Ürünün sipariş anındaki birim fiyatı (KDV dahil/hariç)
+  unit_vat_rate: number;
+  created_at: string;
+}
