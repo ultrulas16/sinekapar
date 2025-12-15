@@ -13,6 +13,7 @@ const nameMap: { [key: string]: string } = {
   'admin': 'Yönetici Paneli',
   'dealer': 'Bayi Paneli',
   'cart': 'Sepetim',
+  'checkout': 'Ödeme', // <-- EKLENDİ
   'product': 'Ürün Detayı', 
 };
 
@@ -35,13 +36,10 @@ export function Breadcrumbs() {
           
           let displayName = nameMap[value] || value;
           
-          // Eğer parça ürün ID'si gibi dinamik bir değerse (/product/ID)
-          // ve bir önceki parça 'product' ise, o parçayı atla.
           if (pathnames[index - 1] === 'product' && index > 0 && !nameMap[value]) {
             return null;
           }
 
-          // Eğer dinamik ID parçası atlanıyorsa, link adı 'Ürün Detayı' olmalı
           if (pathnames[index - 1] === 'product' && index > 0) {
             displayName = nameMap['product'];
           }
