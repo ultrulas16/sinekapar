@@ -1,5 +1,3 @@
-// src/pages/dealer/DealerCustomers.tsx (Yeniden Yüklemeyi Zorlama ve Gecikme Eklendi)
-
 import { useEffect, useState, useCallback } from 'react'; 
 import { Plus, Edit, Trash2, Building2, MapPin } from 'lucide-react';
 import { supabase, type Customer, type Dealer, type DealerTierLimit } from '../../lib/supabase';
@@ -9,7 +7,7 @@ interface DealerCustomersProps {
   dealer: Dealer | null;
 }
 
-// Gecikme fonksiyonu (RLS senkronizasyon sorunlarını aşmak için)
+// Gecikme fonksiyonu (eski RLS/senkronizasyon şüphesi için tutuldu)
 const delay = (ms: number) => new Promise(resolve => setTimeout(resolve, ms));
 
 export default function DealerCustomers({ dealerId, dealer }: DealerCustomersProps) {
@@ -17,7 +15,7 @@ export default function DealerCustomers({ dealerId, dealer }: DealerCustomersPro
   const [tierLimit, setTierLimit] = useState<DealerTierLimit | null>(null);
   const [showForm, setShowForm] = useState(false);
   const [editingCustomer, setEditingCustomer] = useState<Customer | null>(null);
-  const [refreshKey, setRefreshKey] = useState(0); // <-- Yeniden çizimi tetikleyici
+  const [refreshKey, setRefreshKey] = useState(0); 
 
   const [form, setForm] = useState({
     company_name: '',
@@ -35,7 +33,7 @@ export default function DealerCustomers({ dealerId, dealer }: DealerCustomersPro
       const { data, error } = await supabase
         .from('customers')
         .select('*')
-        .eq('dealer_id', dealerId)
+        // .eq('dealer_id', dealerId) // ⚠️ GEÇİCİ TEŞHİS: Bu satır yorum satırı yapıldı. Eğer şimdi liste gelirse, sorun dealerId değişkenindedir.
         .order('created_at', { ascending: false });
 
       if (error) throw error;
@@ -60,11 +58,10 @@ export default function DealerCustomers({ dealerId, dealer }: DealerCustomersPro
     }
   }, []);
 
-  // refreshKey değiştiğinde listeyi zorla yükle
   useEffect(() => {
     loadCustomers();
     if (dealer) loadTierLimit(dealer.tier);
-  }, [loadCustomers, dealer, loadTierLimit, refreshKey]); // <-- refreshKey eklendi
+  }, [loadCustomers, dealer, loadTierLimit, refreshKey]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -93,7 +90,6 @@ export default function DealerCustomers({ dealerId, dealer }: DealerCustomersPro
         if (error) throw error;
       }
 
-      // Durum sıfırlanıyor
       setShowForm(false);
       setEditingCustomer(null);
       setForm({
@@ -107,7 +103,6 @@ export default function DealerCustomers({ dealerId, dealer }: DealerCustomersPro
         notes: '',
       });
       
-      // RLS senkronizasyonu için bekle ve yeniden çizimi tetikle
       await delay(500); 
       setRefreshKey(prev => prev + 1); 
       
