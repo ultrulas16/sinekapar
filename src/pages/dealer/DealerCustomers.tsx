@@ -1,3 +1,5 @@
+// src/pages/dealer/DealerCustomers.tsx (Gecikme Eklendi)
+
 import { useEffect, useState, useCallback } from 'react'; 
 import { Plus, Edit, Trash2, Building2, MapPin } from 'lucide-react';
 import { supabase, type Customer, type Dealer, type DealerTierLimit } from '../../lib/supabase';
@@ -7,12 +9,16 @@ interface DealerCustomersProps {
   dealer: Dealer | null;
 }
 
+// Gecikme fonksiyonu
+const delay = (ms: number) => new Promise(resolve => setTimeout(resolve, ms));
+
 export default function DealerCustomers({ dealerId, dealer }: DealerCustomersProps) {
+// ... (Diğer state'ler ve form state'leri aynı kalır)
   const [customers, setCustomers] = useState<Customer[]>([]);
   const [tierLimit, setTierLimit] = useState<DealerTierLimit | null>(null);
   const [showForm, setShowForm] = useState(false);
   const [editingCustomer, setEditingCustomer] = useState<Customer | null>(null);
-  const [refreshKey, setRefreshKey] = useState(0); // <-- YENİ: Yeniden çizimi zorlamak için sayaç
+  const [refreshKey, setRefreshKey] = useState(0); 
 
   const [form, setForm] = useState({
     company_name: '',
@@ -26,6 +32,7 @@ export default function DealerCustomers({ dealerId, dealer }: DealerCustomersPro
   });
 
   const loadCustomers = useCallback(async () => {
+    // ... (loadCustomers mantığı aynı kalır)
     try {
       const { data, error } = await supabase
         .from('customers')
@@ -41,6 +48,7 @@ export default function DealerCustomers({ dealerId, dealer }: DealerCustomersPro
   }, [dealerId]);
 
   const loadTierLimit = useCallback(async (tier: number) => {
+    // ... (loadTierLimit mantığı aynı kalır)
     try {
       const { data, error } = await supabase
         .from('dealer_tier_limits')
@@ -55,11 +63,10 @@ export default function DealerCustomers({ dealerId, dealer }: DealerCustomersPro
     }
   }, []);
 
-  // refreshKey buraya eklendiği için, her sayaç arttığında loadCustomers çalışacak.
   useEffect(() => {
     loadCustomers();
     if (dealer) loadTierLimit(dealer.tier);
-  }, [loadCustomers, dealer, loadTierLimit, refreshKey]); // <-- refreshKey eklendi
+  }, [loadCustomers, dealer, loadTierLimit, refreshKey]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -102,7 +109,10 @@ export default function DealerCustomers({ dealerId, dealer }: DealerCustomersPro
         notes: '',
       });
       
-      // Yeniden çizimi tetikle (Mutlaka yeni veriyi çekecektir)
+      // ⚠️ Gecikme eklendi: RLS veya veritabanı senkronizasyonu için bekle
+      await delay(500); 
+      
+      // Yeniden çizimi tetikle
       setRefreshKey(prev => prev + 1); 
       
     } catch (error: any) {
@@ -111,6 +121,7 @@ export default function DealerCustomers({ dealerId, dealer }: DealerCustomersPro
   };
 
   const handleEdit = (customer: Customer) => {
+    // ... (handleEdit mantığı aynı kalır)
     setEditingCustomer(customer);
     setForm({
       company_name: customer.company_name,
@@ -132,17 +143,21 @@ export default function DealerCustomers({ dealerId, dealer }: DealerCustomersPro
       const { error } = await supabase.from('customers').delete().eq('id', customerId);
       if (error) throw error;
       
-      // Silme işleminden sonra yeniden çizimi tetikle
+      // ⚠️ Gecikme eklendi
+      await delay(500);
+      
       setRefreshKey(prev => prev + 1); 
     } catch (error: any) {
       alert('Hata: ' + error.message);
     }
   };
-
+  
+  // ... (Geri kalan render kodu aynı kalır)
   const canAddMore = !tierLimit || customers.length < tierLimit.max_customers;
 
   return (
     <div>
+      {/* ... (Render kodu aynı) ... */}
       <div className="flex justify-between items-center mb-6">
         <div>
           <h2 className="text-xl font-semibold text-gray-900">Müşteriler</h2>
