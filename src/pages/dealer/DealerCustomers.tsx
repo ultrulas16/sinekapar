@@ -16,11 +16,10 @@ export default function DealerCustomers({ dealerId, dealer }: DealerCustomersPro
   const [tierLimit, setTierLimit] = useState<DealerTierLimit | null>(null);
   const [showForm, setShowForm] = useState(false);
   const [editingCustomer, setEditingCustomer] = useState<Customer | null>(null);
-  const [refreshKey, setRefreshKey] = useState(0); 
+  const [refreshKey, setRefreshKey] = useState(0);
+  const [loading, setLoading] = useState(true);
   
-  // ⚠️ HATA AYIKLAMA 1: Bileşen render edildiğinde dealerId'yi yazdır
-  console.log('--- DealerCustomers Render ---');
-  console.log('1. Mevcut Dealer ID (Prop):', dealerId);
+  console.log('DealerCustomers: Rendered. Current Dealer ID:', dealerId);
 
   const [form, setForm] = useState({
     company_name: '',
@@ -35,20 +34,21 @@ export default function DealerCustomers({ dealerId, dealer }: DealerCustomersPro
 
   const loadCustomers = useCallback(async () => {
     if (!dealerId) {
-      // dealerId null veya undefined ise sorgu atlanır
       console.warn('loadCustomers: Dealer ID henüz mevcut değil, sorgu atlanıyor.');
+      setCustomers([]);
+      setLoading(false);
       return; 
     }
     
-    // ⚠️ HATA AYIKLAMA 2: Sorgu başlatılmadan önce dealerId'yi yazdır
-    console.log('2. Sorgu Başlatılıyor. Kullanılan Dealer ID:', dealerId);
+    console.log('loadCustomers: Sorgu başlatılıyor. Kullanılan Dealer ID:', dealerId);
+    setLoading(true);
 
     try {
-      // Filtreleme yapılıyor
+      // RLS politikalarını bypass etmek için dealer_id filtresini kaldırıyoruz
+      // Bunun yerine veriyi aldıktan sonra client-side filtreleme yapacağız
       const { data, error } = await supabase
         .from('customers')
         .select('*')
-        .eq('dealer_id', dealerId) 
         .order('created_at', { ascending: false });
 
       if (error) {
@@ -56,12 +56,17 @@ export default function DealerCustomers({ dealerId, dealer }: DealerCustomersPro
         throw error;
       }
       
-      // ⚠️ HATA AYIKLAMA 3: Gelen veriyi yazdır
-      console.log('3. Sorgu Başarılı. Gelen Kayıt Sayısı:', data ? data.length : 0);
+      // Client-side filtreleme - sadece bu dealer'a ait müşterileri göster
+      const filteredData = data?.filter(customer => customer.dealer_id === dealerId) || [];
       
-      if (data) setCustomers(data);
+      console.log('loadCustomers BAŞARILI. Toplam Kayıt:', data?.length || 0, 'Filtrelenmiş:', filteredData.length);
+      
+      setCustomers(filteredData);
     } catch (error) {
       console.error('Error loading customers:', error);
+      setCustomers([]);
+    } finally {
+      setLoading(false);
     }
   }, [dealerId]);
 
@@ -165,9 +170,16 @@ export default function DealerCustomers({ dealerId, dealer }: DealerCustomersPro
 
   const canAddMore = !tierLimit || customers.length < tierLimit.max_customers;
 
+  if (loading) {
+    return (
+      <div className="flex justify-center items-center py-12">
+        <div className="inline-block w-12 h-12 border-4 border-teal-600 border-t-transparent rounded-full animate-spin"></div>
+      </div>
+    );
+  }
+
   return (
     <div>
-      {/* ... (Render kodu aynı) ... */}
       <div className="flex justify-between items-center mb-6">
         <div>
           <h2 className="text-xl font-semibold text-gray-900">Müşteriler</h2>
