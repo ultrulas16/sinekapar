@@ -6,12 +6,26 @@ import { useAuth } from '../contexts/AuthContext';
 import { useNavigate, Link } from 'react-router-dom';
 import Header from '../components/Header';
 import { Breadcrumbs } from '../components/Breadcrumbs';
-import { Loader2, CreditCard, Home, Truck } from 'lucide-react';
+import { Loader2, Landmark, Home, Truck, AlertCircle, Copy } from 'lucide-react';
 
 // Demo Adres Verileri (Gerçekte Supabase'den çekilmeli)
 const DUMMY_ADDRESSES: Address[] = [
     { id: '1', user_id: '', title: 'Ev Adresim', full_name: 'Ahmet Yılmaz', phone: '5551234567', city: 'İstanbul', district: 'Kadıköy', full_address: 'Örnek Mah. No:1, Kat:2', is_default: true, created_at: new Date().toISOString() },
     { id: '2', user_id: '', title: 'İş Adresim', full_name: 'Ahmet Yılmaz', phone: '5559876543', city: 'Ankara', district: 'Çankaya', full_address: 'Ticaret Merkezi, 5. Kat', is_default: false, created_at: new Date().toISOString() },
+];
+
+// Banka Hesap Bilgileri (Sabit Veri)
+const BANK_ACCOUNTS = [
+    { 
+        bankName: 'Ziraat Bankası', 
+        accountName: 'SineKapar İlaçlama Ltd. Şti.', 
+        iban: 'TR00 0000 0000 0000 0000 0000 00' 
+    },
+    { 
+        bankName: 'Garanti BBVA', 
+        accountName: 'SineKapar İlaçlama Ltd. Şti.', 
+        iban: 'TR11 1111 1111 1111 1111 1111 11' 
+    }
 ];
 
 export default function Checkout() {
@@ -22,7 +36,10 @@ export default function Checkout() {
     const [selectedShippingAddressId, setSelectedShippingAddressId] = useState<string | null>(DUMMY_ADDRESSES[0]?.id || null);
     const [loading, setLoading] = useState(true);
     const [isSubmitting, setIsSubmitting] = useState(false);
-    const [paymentMethod, setPaymentMethod] = useState<'card' | 'transfer' | 'cod'>('card');
+    
+    // Ödeme yöntemi artık sabit: 'transfer'
+    const paymentMethod = 'transfer'; 
+    
     const [shippingOption, setShippingOption] = useState<'standard' | 'express'>('standard');
 
     // Kargo ücretleri
@@ -100,7 +117,7 @@ export default function Checkout() {
                 total_amount: totalAmount,
                 vat_amount: 0, 
                 shipping_fee: shippingFee,
-                payment_method: paymentMethod,
+                payment_method: paymentMethod, // 'transfer' olarak kaydedilecek
                 payment_status: 'pending' as const,
                 shipping_option: shippingOption,
             };
@@ -135,7 +152,7 @@ export default function Checkout() {
                 .delete()
                 .eq('user_id', user.id);
 
-            alert(`Siparişiniz başarıyla alındı! Sipariş No: ${newOrderId}`);
+            alert(`Siparişiniz başarıyla alındı! Lütfen havale işlemini gerçekleştiriniz.`);
             navigate(`/order/${newOrderId}`); 
 
         } catch (error: any) {
@@ -236,29 +253,38 @@ export default function Checkout() {
                             </div>
                         </div>
 
-                        {/* 3. Ödeme Yöntemi */}
+                        {/* 3. Ödeme Yöntemi (Sadece Havale/EFT) */}
                         <div className="bg-white p-6 rounded-xl shadow">
                             <h2 className="text-xl font-semibold mb-4 flex items-center space-x-2 text-indigo-600">
-                                <CreditCard className="w-5 h-5" />
-                                <span>Ödeme Yöntemi</span>
+                                <Landmark className="w-5 h-5" />
+                                <span>Ödeme Yöntemi: Havale / EFT</span>
                             </h2>
-                            <div className="space-y-3">
-                                {['card', 'transfer', 'cod'].map(method => (
-                                    <div 
-                                        key={method}
-                                        onClick={() => setPaymentMethod(method as 'card' | 'transfer' | 'cod')}
-                                        className={`p-4 border rounded-lg cursor-pointer transition-all ${
-                                            paymentMethod === method ? 'border-indigo-600 ring-2 ring-indigo-100 bg-indigo-50' : 'hover:border-gray-400'
-                                        }`}
-                                    >
-                                        <p className="font-semibold capitalize">
-                                            {method === 'card' ? 'Kredi/Banka Kartı' : method === 'transfer' ? 'Banka Havalesi' : 'Kapıda Ödeme'}
-                                        </p>
-                                        {paymentMethod === 'card' && (
-                                            <div className="mt-2 p-2 border-t text-sm">
-                                                Kart bilgileri formu yer tutucu
-                                            </div>
-                                        )}
+                            
+                            <div className="bg-blue-50 border border-blue-200 rounded-lg p-4 mb-4">
+                                <div className="flex items-start gap-3">
+                                    <AlertCircle className="w-5 h-5 text-blue-600 mt-0.5 flex-shrink-0" />
+                                    <div className="text-sm text-blue-800">
+                                        <p className="font-semibold mb-1">Bilgilendirme:</p>
+                                        <p>Ödemenizi aşağıdaki banka hesaplarına yapabilirsiniz. <strong>Siparişiniz onaylandıktan sonra size verilecek olan Sipariş Numarasını</strong> açıklama kısmına yazmayı unutmayınız.</p>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div className="grid gap-4 md:grid-cols-2">
+                                {BANK_ACCOUNTS.map((account, index) => (
+                                    <div key={index} className="border border-gray-200 rounded-lg p-4 hover:border-indigo-300 transition-colors">
+                                        <p className="font-bold text-gray-800">{account.bankName}</p>
+                                        <p className="text-sm text-gray-600 mb-2">{account.accountName}</p>
+                                        <div className="flex items-center justify-between bg-gray-50 p-2 rounded border border-gray-100">
+                                            <code className="text-xs sm:text-sm text-indigo-700 font-mono break-all">{account.iban}</code>
+                                            <button 
+                                                onClick={() => navigator.clipboard.writeText(account.iban)}
+                                                className="text-gray-400 hover:text-indigo-600 ml-2"
+                                                title="IBAN'ı Kopyala"
+                                            >
+                                                <Copy className="w-4 h-4" />
+                                            </button>
+                                        </div>
                                     </div>
                                 ))}
                             </div>
@@ -290,7 +316,6 @@ export default function Checkout() {
                                 {cartItems.some(item => item.product.stock_quantity < item.quantity) && "Bazı ürünlerin stok adedi sepetinizdeki miktardan az. Lütfen sepetinizi kontrol edin."}
                             </p>
 
-
                             <button 
                                 onClick={handleSubmitOrder}
                                 disabled={isSubmitting || !selectedShippingAddressId || cartItems.some(item => item.product.stock_quantity < item.quantity)}
@@ -302,7 +327,7 @@ export default function Checkout() {
                                         <span>Sipariş Oluşturuluyor...</span>
                                     </>
                                 ) : (
-                                    <span>Siparişi Tamamla</span>
+                                    <span>Siparişi Onayla ve Tamamla</span>
                                 )}
                             </button>
                             
