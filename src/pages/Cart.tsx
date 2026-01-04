@@ -228,7 +228,7 @@ export default function Cart() {
             {/* Sipariş Özeti (Sağ) */}
             <div className="lg:col-span-1">
               <div className="bg-white p-6 rounded-xl shadow-lg sticky top-4">
-                <h2 className="text-xl font-bold mb-4 border-b pb-2">Sipariş Özeti</h2>
+                <h2 className="text-xl font-bold mb-4 border-b pb-2">Sipariş Özetiniz</h2>
                 
                 <div className="space-y-3">
                     <div className="flex justify-between text-gray-700">
