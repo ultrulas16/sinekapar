@@ -298,7 +298,7 @@ export default function LandingPage() {
                   <Phone className="w-8 h-8" />
                 </div>
                 <h3 className="text-xl font-semibold mb-2">Telefon</h3>
-                <p className="text-teal-100">0533 665 22 51</p>
+                <p className="text-teal-100">0850 XXX XX XX</p>
               </div>
 
               <div className="text-center">
@@ -324,7 +324,7 @@ export default function LandingPage() {
       <footer className="bg-gray-900 text-white py-8">
         <div className="container mx-auto px-4 text-center">
           <p className="text-gray-400">
-            &copy; 2026 SineKapar. Tüm hakları saklıdır.
+            &copy; 2024 SineKapar. Tüm hakları saklıdır.
           </p>
         </div>
       </footer>

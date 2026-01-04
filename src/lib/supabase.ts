@@ -1,5 +1,3 @@
-// src/lib/supabase.ts
-
 import { createClient } from '@supabase/supabase-js';
 
 const supabaseUrl = import.meta.env.VITE_SUPABASE_URL;
@@ -136,58 +134,4 @@ export interface Visit {
   completion_notes?: string;
   created_at: string;
   updated_at: string;
-}
-
-// SEPET ARATÜZLERİ
-export interface CartItem {
-  id: string;
-  user_id: string;
-  product_id: string;
-  quantity: number;
-  created_at: string;
-}
-
-export interface CartItemWithProduct extends CartItem {
-  product: Product; 
-}
-
-// YENİ EKLENEN SİPARİŞ VE ADRES ARATÜZLERİ
-export interface Address {
-  id: string;
-  user_id: string;
-  title: string;
-  full_name: string;
-  phone: string;
-  city: string;
-  district: string;
-  full_address: string;
-  is_default: boolean;
-  created_at: string;
-}
-
-export interface Order {
-  id: string;
-  user_id: string;
-  billing_address_id: string;
-  shipping_address_id: string;
-  status: 'pending' | 'processing' | 'shipped' | 'delivered' | 'cancelled';
-  total_amount: number;
-  vat_amount: number;
-  shipping_fee: number;
-  payment_method: 'card' | 'transfer' | 'cod';
-  payment_status: 'pending' | 'paid' | 'failed';
-  shipping_option: string;
-  dealer_id?: string;
-  created_at: string;
-  updated_at: string;
-}
-
-export interface OrderItem {
-  id: string;
-  order_id: string;
-  product_id: string;
-  quantity: number;
-  unit_price: number;
-  unit_vat_rate: number;
-  created_at: string;
 }

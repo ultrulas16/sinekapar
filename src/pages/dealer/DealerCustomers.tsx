@@ -1,6 +1,4 @@
-// src/pages/dealer/DealerCustomers.tsx
-
-import { useEffect, useState, useCallback } from 'react'; 
+import { useEffect, useState } from 'react';
 import { Plus, Edit, Trash2, Building2, MapPin } from 'lucide-react';
 import { supabase, type Customer, type Dealer, type DealerTierLimit } from '../../lib/supabase';
 
@@ -9,17 +7,11 @@ interface DealerCustomersProps {
   dealer: Dealer | null;
 }
 
-const delay = (ms: number) => new Promise(resolve => setTimeout(resolve, ms));
-
 export default function DealerCustomers({ dealerId, dealer }: DealerCustomersProps) {
   const [customers, setCustomers] = useState<Customer[]>([]);
   const [tierLimit, setTierLimit] = useState<DealerTierLimit | null>(null);
   const [showForm, setShowForm] = useState(false);
   const [editingCustomer, setEditingCustomer] = useState<Customer | null>(null);
-  const [refreshKey, setRefreshKey] = useState(0);
-  const [loading, setLoading] = useState(true);
-  
-  console.log('DealerCustomers: Rendered. Current Dealer ID:', dealerId);
 
   const [form, setForm] = useState({
     company_name: '',
@@ -32,45 +24,27 @@ export default function DealerCustomers({ dealerId, dealer }: DealerCustomersPro
     notes: '',
   });
 
-  const loadCustomers = useCallback(async () => {
-    if (!dealerId) {
-      console.warn('loadCustomers: Dealer ID henüz mevcut değil, sorgu atlanıyor.');
-      setCustomers([]);
-      setLoading(false);
-      return; 
-    }
-    
-    console.log('loadCustomers: Sorgu başlatılıyor. Kullanılan Dealer ID:', dealerId);
-    setLoading(true);
+  useEffect(() => {
+    loadCustomers();
+    if (dealer) loadTierLimit(dealer.tier);
+  }, [dealerId, dealer]);
 
+  const loadCustomers = async () => {
     try {
-      // RLS politikalarını bypass etmek için dealer_id filtresini kaldırıyoruz
-      // Bunun yerine veriyi aldıktan sonra client-side filtreleme yapacağız
       const { data, error } = await supabase
         .from('customers')
         .select('*')
+        .eq('dealer_id', dealerId)
         .order('created_at', { ascending: false });
 
-      if (error) {
-        console.error('loadCustomers HATA:', error);
-        throw error;
-      }
-      
-      // Client-side filtreleme - sadece bu dealer'a ait müşterileri göster
-      const filteredData = data?.filter(customer => customer.dealer_id === dealerId) || [];
-      
-      console.log('loadCustomers BAŞARILI. Toplam Kayıt:', data?.length || 0, 'Filtrelenmiş:', filteredData.length);
-      
-      setCustomers(filteredData);
+      if (error) throw error;
+      if (data) setCustomers(data);
     } catch (error) {
       console.error('Error loading customers:', error);
-      setCustomers([]);
-    } finally {
-      setLoading(false);
     }
-  }, [dealerId]);
+  };
 
-  const loadTierLimit = useCallback(async (tier: number) => {
+  const loadTierLimit = async (tier: number) => {
     try {
       const { data, error } = await supabase
         .from('dealer_tier_limits')
@@ -83,12 +57,7 @@ export default function DealerCustomers({ dealerId, dealer }: DealerCustomersPro
     } catch (error) {
       console.error('Error loading tier limit:', error);
     }
-  }, []);
-
-  useEffect(() => {
-    loadCustomers();
-    if (dealer) loadTierLimit(dealer.tier);
-  }, [loadCustomers, dealer, loadTierLimit, refreshKey]);
+  };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -129,12 +98,8 @@ export default function DealerCustomers({ dealerId, dealer }: DealerCustomersPro
         tax_number: '',
         notes: '',
       });
-      
-      await delay(500); 
-      setRefreshKey(prev => prev + 1); 
-      
+      loadCustomers();
     } catch (error: any) {
-      console.error('Müşteri ekleme/güncelleme hatası:', error);
       alert('Hata: ' + error.message);
     }
   };
@@ -160,23 +125,13 @@ export default function DealerCustomers({ dealerId, dealer }: DealerCustomersPro
     try {
       const { error } = await supabase.from('customers').delete().eq('id', customerId);
       if (error) throw error;
-      
-      await delay(500);
-      setRefreshKey(prev => prev + 1); 
+      loadCustomers();
     } catch (error: any) {
       alert('Hata: ' + error.message);
     }
   };
 
   const canAddMore = !tierLimit || customers.length < tierLimit.max_customers;
-
-  if (loading) {
-    return (
-      <div className="flex justify-center items-center py-12">
-        <div className="inline-block w-12 h-12 border-4 border-teal-600 border-t-transparent rounded-full animate-spin"></div>
-      </div>
-    );
-  }
 
   return (
     <div>
@@ -192,7 +147,7 @@ export default function DealerCustomers({ dealerId, dealer }: DealerCustomersPro
         <button
           onClick={() => {
             if (!canAddMore) {
-              alert(`Maksimum müşteri limitine ulaştınız (${tierLimit?.max_customers}). Daha fazla müşteri eklemek için seviyenizi yükseltiniz.`);
+              alert(`Maksimum müşteri limitine ulaştınız (${tierLimit?.max_customers}). Daha fazla müşteri eklemek için bayi seviyenizi yükseltiniz.`);
               return;
             }
             setShowForm(!showForm);
